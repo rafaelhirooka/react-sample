@@ -6,22 +6,31 @@ import api from './services/api';
 import './App.css';
 
 function App() {
-  const [projects, setProjects] = useState([]);
+  const [repositories, setRepositories] = useState([]);
+  const [name, setName] = useState('');
+  const [link, setLink] = useState('');
+  const [techs, setTechs] = useState([]);
 
   useEffect(() => {
     api.get('repositories').then(response => {
-      setProjects(response.data);
+      setRepositories(response.data);
     });
   }, []);
 
-  async function handleAddProject() {
+  async function handleAddRepository() {
     const response = await api.post('repositories', {
-      "title": `Novo repositorio ${Date.now()}`,
-      "url": "https://github.com/rafaelhirooka/proffy",
-      "techs": ["Node", "React"]
+      "title": name,
+      "url": link,
+      "techs": techs
     });
 
-    setProjects([...projects, response.data]);
+    setRepositories([...repositories, response.data]);
+  }
+
+  function handleRemoveRepository(repositoryId) {
+    api.delete(`repositories/${repositoryId}`);
+
+    setRepositories(repositories.filter(repository => repository.id != repositoryId));
   }
 
   return (
@@ -29,10 +38,21 @@ function App() {
       <Header title="Repositórios" />
 
       <ul>
-        {projects.map(project => <li key={project.id}>{project.title}</li>)}
+        {repositories.map(repostitory => (
+          <li key={repostitory.id}>
+            {repostitory.title}
+            <button type="button" onClick={() => handleRemoveRepository(repostitory.id)}>Remover</button>
+          </li>
+        ))}
       </ul>
 
-      <button type="button" onClick={handleAddProject}>Adicionar projeto</button>
+      <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Repository name" />
+      <br/>
+      <input type="text" value={link} onChange={e => setLink(e.target.value)} placeholder="Repository link" />
+      <br/>
+      <input type="text" value={techs} onChange={e => setTechs(e.target.value.split(','))} placeholder="Repository techs (separate it with commas)" />
+      <br/>
+      <button type="button" onClick={handleAddRepository}>Adicionar projeto</button>
     </>
   )
 }
